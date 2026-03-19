@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Tip Calculator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: #F2F2F7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+    }
+
+    .status-bar-spacer {
+      height: env(safe-area-inset-top, 44px);
+      background: #1C1C1E;
+      width: 100%;
+    }
+
+    header {
+      width: 100%;
+      background: #1C1C1E;
+      padding: 16px 20px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      color: #FFFFFF;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      color: #8E8E93;
+      font-size: 13px;
+      margin-top: 3px;
+      font-weight: 400;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #8E8E93;
+      padding: 14px 16px 6px;
+    }
+
+    /* ── Input rows ── */
+    .input-row {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      height: 52px;
+      border-top: 1px solid #F2F2F7;
+    }
+
+    .input-row:first-of-type {
+      border-top: none;
+    }
+
+    .input-label {
+      font-size: 17px;
+      color: #1C1C1E;
+      flex: 1;
+    }
+
+    .input-prefix {
+      font-size: 17px;
+      color: #8E8E93;
+      margin-right: 4px;
+    }
+
+    .input-row input[type="number"] {
+      border: none;
+      outline: none;
+      font-size: 17px;
+      color: #1C1C1E;
+      text-align: right;
+      width: 130px;
+      background: transparent;
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+
+    .input-row input[type="number"]::placeholder {
+      color: #C7C7CC;
+    }
+
+    /* ── Checkbox row (service fee offset) ── */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      padding: 13px 16px;
+      border-top: 1px solid #F2F2F7;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: #1C1C1E;
+      cursor: pointer;
+      flex-shrink: 0;
+      border-radius: 6px;
+    }
+
+    .checkbox-label {
+      font-size: 15px;
+      color: #1C1C1E;
+      line-height: 1.35;
+      flex: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label span {
+      display: block;
+      font-size: 12px;
+      color: #8E8E93;
+      margin-top: 2px;
+      font-weight: 400;
+    }
+
+    /* ── Tip selector ── */
+    .tip-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 14px 14px 14px;
+    }
+
+    .tip-btn {
+      background: #F2F2F7;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 14px 6px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #1C1C1E;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      text-align: center;
+      -webkit-appearance: none;
+    }
+
+    .tip-btn.active {
+      background: #1C1C1E;
+      color: #FFFFFF;
+      border-color: #1C1C1E;
+    }
+
+    .tip-btn:active {
+      transform: scale(0.95);
+      opacity: 0.85;
+    }
+
+    /* ── Results ── */
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-top: 1px solid #F2F2F7;
+    }
+
+    .result-row:first-of-type {
+      border-top: none;
+    }
+
+    .result-label {
+      font-size: 15px;
+      color: #8E8E93;
+      font-weight: 500;
+    }
+
+    .result-value {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1C1C1E;
+    }
+
+    .result-row.total-row {
+      background: #F9F9FB;
+    }
+
+    .result-row.total-row .result-label {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1C1C1E;
+    }
+
+    .result-row.total-row .result-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1C1C1E;
+    }
+
+    /* Strikethrough + remaining tip rows */
+    .result-row.tip-offset-row .result-label {
+      color: #C7C7CC;
+    }
+    .result-row.tip-offset-row .result-value {
+      color: #C7C7CC;
+      text-decoration: line-through;
+    }
+
+    .result-row.tip-remaining-row .result-label {
+      color: #34C759;
+      font-weight: 600;
+    }
+    .result-row.tip-remaining-row .result-value {
+      color: #34C759;
+      font-weight: 700;
+    }
+
+    /* ── Per person ── */
+    .split-row {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      height: 52px;
+      border-top: 1px solid #F2F2F7;
+    }
+
+    .split-label {
+      font-size: 17px;
+      color: #1C1C1E;
+      flex: 1;
+    }
+
+    .split-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .split-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #E5E5EA;
+      border: none;
+      font-size: 20px;
+      line-height: 1;
+      color: #1C1C1E;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .split-btn:active {
+      transform: scale(0.9);
+      background: #C7C7CC;
+    }
+
+    .split-count {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1C1C1E;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* ── Reset ── */
+    .reset-btn {
+      width: 100%;
+      background: #FFFFFF;
+      border: none;
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #FF3B30;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .reset-btn:active {
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+
+    .bottom-spacer {
+      height: env(safe-area-inset-bottom, 20px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="status-bar-spacer"></div>
+
+  <header>
+    <h1>Tip Calculator</h1>
+    <p>Tip is calculated on pre-tax amount</p>
+  </header>
+
+  <div class="container">
+
+    <!-- Inputs -->
+    <div class="card">
+      <div class="card-title">Bill Details</div>
+
+      <div class="input-row">
+        <span class="input-label">Pre-tax Amount</span>
+        <span class="input-prefix">$</span>
+        <input
+          type="number"
+          id="pretax"
+          inputmode="decimal"
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+          oninput="calculate()"
+        />
+      </div>
+
+      <div class="input-row">
+        <span class="input-label">Tax Amount</span>
+        <span class="input-prefix">$</span>
+        <input
+          type="number"
+          id="tax"
+          inputmode="decimal"
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+          oninput="calculate()"
+        />
+      </div>
+
+      <div class="input-row">
+        <span class="input-label">Service Fee</span>
+        <span class="input-prefix">$</span>
+        <input
+          type="number"
+          id="servicefee"
+          inputmode="decimal"
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+          oninput="calculate()"
+        />
+      </div>
+
+      <div class="input-row">
+        <span class="input-label">Miscellaneous Fee</span>
+        <span class="input-prefix">$</span>
+        <input
+          type="number"
+          id="miscfee"
+          inputmode="decimal"
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+          oninput="calculate()"
+        />
+      </div>
+
+      <!-- Checkbox: subtract service fee from tip -->
+      <label class="checkbox-row" for="deductServiceFee">
+        <input
+          type="checkbox"
+          id="deductServiceFee"
+          onchange="calculate()"
+        />
+        <span class="checkbox-label">
+          Deduct service fee from tip
+          <span>Shows remaining tip after service fee is applied</span>
+        </span>
+      </label>
+    </div>
+
+    <!-- Tip selector -->
+    <div class="card">
+      <div class="card-title">Tip Percentage</div>
+      <div class="tip-grid">
+        <button class="tip-btn" data-tip="10" onclick="selectTip(this)">10%</button>
+        <button class="tip-btn" data-tip="15" onclick="selectTip(this)">15%</button>
+        <button class="tip-btn active" data-tip="18" onclick="selectTip(this)">18%</button>
+        <button class="tip-btn" data-tip="20" onclick="selectTip(this)">20%</button>
+      </div>
+    </div>
+
+    <!-- Split -->
+    <div class="card">
+      <div class="card-title">Split</div>
+      <div class="split-row">
+        <span class="split-label">Number of People</span>
+        <div class="split-controls">
+          <button class="split-btn" onclick="changeSplit(-1)">−</button>
+          <span class="split-count" id="splitCount">1</span>
+          <button class="split-btn" onclick="changeSplit(1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+      <div class="card-title">Breakdown</div>
+
+      <div class="result-row">
+        <span class="result-label">Pre-tax</span>
+        <span class="result-value" id="res-pretax">$0.00</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Tax</span>
+        <span class="result-value" id="res-tax">$0.00</span>
+      </div>
+      <div class="result-row" id="row-servicefee" style="display:none;">
+        <span class="result-label">Service Fee</span>
+        <span class="result-value" id="res-servicefee">$0.00</span>
+      </div>
+      <div class="result-row" id="row-miscfee" style="display:none;">
+        <span class="result-label">Misc. Fee</span>
+        <span class="result-value" id="res-miscfee">$0.00</span>
+      </div>
+
+      <!-- Tip (full, shown always; strikethrough when deduct is on) -->
+      <div class="result-row" id="row-tip-full">
+        <span class="result-label" id="tip-label">Tip (18%)</span>
+        <span class="result-value" id="res-tip">$0.00</span>
+      </div>
+
+      <!-- Service fee offset line (only when checkbox + service fee > 0) -->
+      <div class="result-row tip-offset-row" id="row-tip-offset" style="display:none;">
+        <span class="result-label">Service Fee Covers</span>
+        <span class="result-value" id="res-tip-offset">−$0.00</span>
+      </div>
+
+      <!-- Remaining tip (only when checkbox + service fee > 0) -->
+      <div class="result-row tip-remaining-row" id="row-tip-remaining" style="display:none;">
+        <span class="result-label">Remaining Tip to Add</span>
+        <span class="result-value" id="res-tip-remaining">$0.00</span>
+      </div>
+
+      <div class="result-row total-row">
+        <span class="result-label" id="total-label">Total</span>
+        <span class="result-value" id="res-total">$0.00</span>
+      </div>
+      <div class="result-row" id="per-person-row" style="display:none;">
+        <span class="result-label">Per Person</span>
+        <span class="result-value" id="res-per-person">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Reset -->
+    <button class="reset-btn" onclick="resetAll()">Reset</button>
+
+  </div>
+
+  <div class="bottom-spacer"></div>
+
+  <script>
+    let selectedTip = 18;
+    let splitCount = 1;
+
+    function fmt(val) {
+      return '$' + val.toFixed(2);
+    }
+
+    function selectTip(btn) {
+      document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedTip = parseInt(btn.dataset.tip);
+      calculate();
+    }
+
+    function changeSplit(delta) {
+      splitCount = Math.max(1, splitCount + delta);
+      document.getElementById('splitCount').textContent = splitCount;
+      calculate();
+    }
+
+    function show(id, visible) {
+      document.getElementById(id).style.display = visible ? 'flex' : 'none';
+    }
+
+    function calculate() {
+      const pretax     = parseFloat(document.getElementById('pretax').value)     || 0;
+      const tax        = parseFloat(document.getElementById('tax').value)         || 0;
+      const serviceFee = parseFloat(document.getElementById('servicefee').value)  || 0;
+      const miscFee    = parseFloat(document.getElementById('miscfee').value)     || 0;
+      const deduct     = document.getElementById('deductServiceFee').checked;
+
+      const tipFull    = pretax * (selectedTip / 100);
+      const tipOffset  = deduct ? Math.min(serviceFee, tipFull) : 0;
+      const tipRemain  = Math.max(0, tipFull - tipOffset);
+
+      // Total always uses full tip (service fee is already in bill)
+      const total      = pretax + tax + serviceFee + miscFee + tipFull;
+      const perPerson  = total / splitCount;
+
+      // Update inputs section
+      document.getElementById('res-pretax').textContent  = fmt(pretax);
+      document.getElementById('res-tax').textContent     = fmt(tax);
+      document.getElementById('res-servicefee').textContent = fmt(serviceFee);
+      document.getElementById('res-miscfee').textContent = fmt(miscFee);
+      show('row-servicefee', serviceFee > 0);
+      show('row-miscfee',    miscFee > 0);
+
+      // Tip row
+      document.getElementById('tip-label').textContent = `Tip (${selectedTip}%)`;
+      document.getElementById('res-tip').textContent   = fmt(tipFull);
+
+      // Toggle strikethrough on tip row when deducting
+      const tipRow = document.getElementById('row-tip-full');
+      if (deduct && serviceFee > 0) {
+        tipRow.classList.add('tip-offset-row');
+      } else {
+        tipRow.classList.remove('tip-offset-row');
+      }
+
+      // Offset & remaining rows
+      if (deduct && serviceFee > 0) {
+        document.getElementById('res-tip-offset').textContent   = '−' + fmt(tipOffset);
+        document.getElementById('res-tip-remaining').textContent = fmt(tipRemain);
+        show('row-tip-offset',    true);
+        show('row-tip-remaining', true);
+      } else {
+        show('row-tip-offset',    false);
+        show('row-tip-remaining', false);
+      }
+
+      // Total & split
+      if (splitCount > 1) {
+        document.getElementById('total-label').textContent = `Total (${splitCount} people)`;
+        show('per-person-row', true);
+        document.getElementById('res-per-person').textContent = fmt(perPerson);
+      } else {
+        document.getElementById('total-label').textContent = 'Total';
+        show('per-person-row', false);
+      }
+
+      document.getElementById('res-total').textContent = fmt(total);
+    }
+
+    function resetAll() {
+      ['pretax','tax','servicefee','miscfee'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('deductServiceFee').checked = false;
+      splitCount = 1;
+      document.getElementById('splitCount').textContent = '1';
+      selectedTip = 18;
+      document.querySelectorAll('.tip-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tip === '18');
+      });
+      calculate();
+    }
+
+    calculate();
+  </script>
+
+</body>
+</html>
