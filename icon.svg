@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Tip Calculator</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3A3A3C"/>
+      <stop offset="55%" stop-color="#1C1C1E"/>
+      <stop offset="100%" stop-color="#0B0B0D"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.12" r="0.75">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <!-- percent mark: white numerator, green denominator (matches the app's accent) -->
+  <g fill="none" stroke-linecap="round">
+    <circle cx="366" cy="386" r="106" stroke="#FFFFFF" stroke-width="62"/>
+    <line x1="702" y1="312" x2="322" y2="712" stroke="#FFFFFF" stroke-width="66"/>
+    <circle cx="658" cy="638" r="106" stroke="#34C759" stroke-width="62"/>
+  </g>
+</svg>
