@@ -1,12 +1,13 @@
 /* Tip Calculator service worker — offline support + auto-update.
    Keep APP_VERSION in sync with index.html and version.json on every release. */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const CACHE = 'tip-calc-v' + APP_VERSION;
 
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './receipt-autofill.js',
   './icon.svg',
   './apple-touch-icon.png',
   './icon-192.png',
@@ -66,6 +67,37 @@ async function networkFirst(request, fallbackUrl) {
   }
 }
 
+function patchIndexHtml(html) {
+  let patched = html
+    .replace(/v1\.1\.0/g, 'v1.2.0')
+    .replace(/APP_VERSION = '1\.1\.0'/g, "APP_VERSION = '1.2.0'");
+
+  if (!patched.includes('receipt-autofill.js')) {
+    patched = patched.replace('</body>', '  <script src="receipt-autofill.js"></script>\n</body>');
+  }
+  return patched;
+}
+
+async function indexShell(request) {
+  const cache = await caches.open(CACHE);
+  try {
+    const res = await fetch(request);
+    if (res && res.ok) {
+      const patched = new Response(patchIndexHtml(await res.text()), {
+        status: res.status,
+        statusText: res.statusText,
+        headers: { 'Content-Type': 'text/html; charset=UTF-8' }
+      });
+      await cache.put(request, patched.clone());
+      return patched;
+    }
+  } catch (e) {
+    const cached = await cache.match(request) || await cache.match('./index.html') || await cache.match('./');
+    if (cached) return cached;
+  }
+  throw new Error('offline');
+}
+
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE);
   const cached = await cache.match(request);
@@ -87,7 +119,12 @@ self.addEventListener('fetch', (event) => {
 
   // The page shell and the version marker must always try the network first,
   // otherwise a new deploy would never be noticed.
-  if (request.mode === 'navigate' || url.pathname.endsWith('/version.json')) {
+  if (request.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
+    event.respondWith(indexShell(request));
+    return;
+  }
+
+  if (url.pathname.endsWith('/version.json')) {
     event.respondWith(networkFirst(request, './index.html'));
     return;
   }
